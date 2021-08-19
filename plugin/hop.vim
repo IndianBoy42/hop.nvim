@@ -34,3 +34,8 @@ command! HopLineAC lua require'hop'.hint_lines({ direction = require'hop.constan
 command! HopLineStart   lua require'hop'.hint_lines_skip_whitespace()
 command! HopLineStartBC lua require'hop'.hint_lines_skip_whitespace({ direction = require'hop.constants'.HintDirection.BEFORE_CURSOR })
 command! HopLineStartAC lua require'hop'.hint_lines_skip_whitespace({ direction = require'hop.constants'.HintDirection.AFTER_CURSOR })
+
+" The jump-to-char-1 command constrained to current line
+command! HopChar1Line lua require'hop'.hint_char1_line()
+command! HopChar1LineAC lua require'hop'.hint_char1_line({ direction = require'hop.constants'.HintDirection.AFTER_CURSOR })
+command! HopChar1LineBC lua require'hop'.hint_char1_line({ direction = require'hop.constants'.HintDirection.BEFORE_CURSOR })
