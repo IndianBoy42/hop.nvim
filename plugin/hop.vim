@@ -39,3 +39,5 @@ command! HopLineStartAC lua require'hop'.hint_lines_skip_whitespace({ direction 
 command! HopChar1Line lua require'hop'.hint_char1_line()
 command! HopChar1LineAC lua require'hop'.hint_char1_line({ direction = require'hop.constants'.HintDirection.AFTER_CURSOR })
 command! HopChar1LineBC lua require'hop'.hint_char1_line({ direction = require'hop.constants'.HintDirection.BEFORE_CURSOR })
+
+command! HopLocals lua require'hop'.hint_locals()

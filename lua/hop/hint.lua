@@ -88,6 +88,77 @@ M.by_line_start = {
 	end,
 }
 
+M.lsp_symbols = {
+	get_hint_list = function(self, hint_opts)
+		-- 		local params = vim.lsp.util.make_position_params()
+		-- 		local results_lsp, err = vim.lsp.buf_request_sync(
+		-- 			0,
+		-- 			"textDocument/documentSymbol",
+		-- 			params,
+		-- 			hint_opts.timeout or 10000
+		-- 		)
+		-- 		if err then
+		-- 			vim.api.nvim_err_writeln("Error when finding document symbols: " .. err)
+		-- 			return
+		-- 		end
+		--
+		-- 		if not results_lsp or vim.tbl_isempty(results_lsp) then
+		-- 			print("No results from textDocument/documentSymbol")
+		-- 			return
+		-- 		end
+		--
+		-- 		local locations = {}
+		-- 		for _, server_results in pairs(results_lsp) do
+		-- 			vim.list_extend(locations, vim.lsp.util.symbols_to_items(server_results.result, 0) or {})
+		-- 		end
+		--
+		-- 		locations = utils.filter_symbols(locations, opts)
+		-- 		if locations == nil then
+		-- 			-- error message already printed in `utils.filter_symbols`
+		-- 			return
+		-- 		end
+		--
+		-- 		if vim.tbl_isempty(locations) then
+		-- 			return
+		-- 		end
+	end,
+}
+
+M.treesitter_locals = function(filter, scope)
+	if filter == nil then
+		filter = function()
+			return true
+		end
+	end
+	-- TODO: filter to current scope
+	return {
+		get_hint_list = function(self, hint_opts)
+			local locals = require("nvim-treesitter.locals")
+			local local_nodes = locals.get_locals()
+			local context = window.get_window_context(hint_opts)
+
+			-- Make sure the nodes are unique.
+			local nodes_set = {}
+			for _, loc in ipairs(local_nodes) do
+				if filter(loc) then
+					locals.recurse_local_nodes(loc, function(_, node, _, match)
+						-- lua doesn't compare tables by value,
+						-- use the value from byte count instead.
+						local line, col, start = node:start()
+						if line <= context.bot_line and line >= context.top_line then
+							nodes_set[start] = {
+								line = line,
+								col = col,
+							}
+						end
+					end)
+				end
+			end
+			return vim.tbl_values(nodes_set)
+		end,
+	}
+end
+
 -- Line hint mode skipping leading whitespace.
 --
 -- Used to tag the beginning of each lines with hints.

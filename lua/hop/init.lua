@@ -135,6 +135,7 @@ local function hint_with(hint_mode, opts)
 		end
 	end
 end
+M.hint_with = hint_with -- Expose to allow users to add custom searches
 
 -- Refine hints in the given buffer.
 --
@@ -175,6 +176,26 @@ end
 
 function M.hint_words(opts)
 	hint_with(hint.by_word_start, get_command_opts(opts))
+end
+
+function M.hint_locals(opts)
+	hint_with(hint.treesitter_locals(), get_command_opts(opts))
+end
+function M.hint_definitions(opts)
+	hint_with(
+		hint.treesitter_locals(function(loc)
+			return loc.definition
+		end),
+		get_command_opts(opts)
+	)
+end
+function M.hint_references(opts)
+	hint_with(
+		hint.treesitter_locals(function(loc)
+			return loc.reference
+		end),
+		get_command_opts(opts)
+	)
 end
 
 function M.hint_patterns(opts, pattern)
