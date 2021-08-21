@@ -121,7 +121,7 @@ local function hint_with(hint_mode, opts)
 
 		if not_special_key and opts.keys:find(key, 1, true) then
 			-- If this is a key used in hop (via opts.keys), deal with it in hop
-			h = M.refine_hints(0, key, opts.teasing, context.direction_mode, hint_mode.curr_line_only, hint_state)
+			h = M.refine_hints(0, key, opts.teasing, context.direction_mode, hint_state)
 			vim.cmd("redraw")
 		else
 			-- If it's not, quit hop
@@ -140,7 +140,7 @@ end
 --
 -- Refining hints allows to advance the state machine by one step. If a terminal step is reached, this function jumps to
 -- the location. Otherwise, it stores the new state machine.
-function M.refine_hints(buf_handle, key, teasing, direction_mode, curr_line_only, hint_state)
+function M.refine_hints(buf_handle, key, teasing, direction_mode, hint_state)
 	local h, hints, update_count = hint.reduce_hints_lines(hint_state.hints, key)
 
 	if h == nil then
@@ -150,12 +150,6 @@ function M.refine_hints(buf_handle, key, teasing, direction_mode, curr_line_only
 		end
 
 		hint_state.hints = hints
-
-		-- Constrain range of lines if we are in current-line-only mode
-		if curr_line_only then
-			top_line = cursor_pos[1] - 1
-			bot_line = cursor_pos[1] - 1
-		end
 
 		grey_things_out(buf_handle, hint_state.hl_ns, hint_state.top_line, hint_state.bot_line, direction_mode)
 		hint.set_hint_extmarks(hint_state.hl_ns, hints)

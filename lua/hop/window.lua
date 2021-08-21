@@ -17,6 +17,9 @@ function M.get_window_context(direction)
 	elseif direction == constants.HintDirection.AFTER_CURSOR then
 		top_line = cursor_pos[1] - 1
 		direction_mode = { cursor_col = cursor_pos[2], direction = direction }
+	elseif direction == constants.HintDirection.CURRENT_LINE then
+		top_line = cursor_pos[1] - 1
+		bot_line = cursor_pos[1] - 1
 	end
 
 	-- NOTE: due to an (unknown yet) bug in neovim, the sign_width is not correctly reported when shifting the window
