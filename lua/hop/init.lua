@@ -190,12 +190,17 @@ function M.hint_definitions(opts)
 	)
 end
 function M.hint_references(opts)
+	-- TODO: show only references to current ident
 	hint_with(
 		hint.treesitter_locals(function(loc)
 			return loc.reference
 		end),
 		get_command_opts(opts)
 	)
+end
+-- TODO: use treesitter-textobjects queries
+function M.hint_textobjects(opts)
+	hint_with(hint.treesitter_queries(), get_command_opts(opts))
 end
 
 function M.hint_patterns(opts, pattern)

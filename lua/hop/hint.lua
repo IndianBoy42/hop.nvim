@@ -124,6 +124,17 @@ M.lsp_symbols = {
 	end,
 }
 
+local function treesitter_filter_window(node, context, nodes_set)
+	local line, col, start = node:start()
+	if line <= context.bot_line and line >= context.top_line then
+		nodes_set[start] = {
+			line = line,
+			col = col + 1,
+		}
+	end
+end
+
+-- TODO: performance of these functions may not be optimal
 M.treesitter_locals = function(filter, scope)
 	if filter == nil then
 		filter = function()
@@ -142,18 +153,53 @@ M.treesitter_locals = function(filter, scope)
 			for _, loc in ipairs(local_nodes) do
 				if filter(loc) then
 					locals.recurse_local_nodes(loc, function(_, node, _, match)
-						-- lua doesn't compare tables by value,
-						-- use the value from byte count instead.
-						local line, col, start = node:start()
-						if line <= context.bot_line and line >= context.top_line then
-							nodes_set[start] = {
-								line = line,
-								col = col,
-							}
-						end
+						treesitter_filter_window(node, context, nodes_set)
 					end)
 				end
 			end
+			return vim.tbl_values(nodes_set)
+		end,
+	}
+end
+
+M.treesitter_queries = function(query, queryfile)
+	return {
+		get_hint_list = function(self, hint_opts)
+			query = nil
+			if queryfile == nil then
+				queryfile = "textobjects"
+			end
+
+			local context = window.get_window_context(hint_opts)
+			local queries = require("nvim-treesitter.query")
+			local tsutils = require("nvim-treesitter.utils")
+			local nodes_set = {}
+			-- utils.dump(queries.collect_group_results(0, "textobjects"))
+
+			local function extract(match)
+				for _, node in pairs(match) do
+					if node.outer then
+						treesitter_filter_window(node.outer.node, context, nodes_set)
+					end
+					if node.inner then
+						treesitter_filter_window(node.inner.node, context, nodes_set)
+					end
+				end
+			end
+
+			if query == nil then
+				for match in queries.iter_group_results(0, queryfile) do
+					extract(match)
+				end
+			else
+				for match in queries.iter_group_results(0, queryfile) do
+					local insert = tsutils.get_at_path(match, query)
+					if insert then
+						extract(match)
+					end
+				end
+			end
+
 			return vim.tbl_values(nodes_set)
 		end,
 	}
