@@ -178,6 +178,8 @@ function M.hint_words(opts)
 	hint_with(hint.by_word_start, get_command_opts(opts))
 end
 
+-- Treesitter hintings
+-- TODO: doesn't grey out the buffer correctly
 function M.hint_locals(opts)
 	hint_with(hint.treesitter_locals(), get_command_opts(opts))
 end
@@ -200,7 +202,7 @@ function M.hint_references(opts)
 end
 -- TODO: use treesitter-textobjects queries
 function M.hint_textobjects(opts)
-	hint_with(hint.treesitter_queries(), get_command_opts(opts))
+	hint_with(hint.treesitter_queries(opts.query, opts.inners, opts.outers, opts.queryfile), get_command_opts(opts))
 end
 
 function M.hint_patterns(opts, pattern)

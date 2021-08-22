@@ -162,12 +162,18 @@ M.treesitter_locals = function(filter, scope)
 	}
 end
 
-M.treesitter_queries = function(query, queryfile)
+M.treesitter_queries = function(query, inners, outers, queryfile)
 	return {
 		get_hint_list = function(self, hint_opts)
 			query = nil
 			if queryfile == nil then
 				queryfile = "textobjects"
+			end
+			if inners == nil then
+				inners = true
+			end
+			if outers == nil then
+				outers = true
 			end
 
 			local context = window.get_window_context(hint_opts)
@@ -178,10 +184,10 @@ M.treesitter_queries = function(query, queryfile)
 
 			local function extract(match)
 				for _, node in pairs(match) do
-					if node.outer then
+					if inners and node.outer then
 						treesitter_filter_window(node.outer.node, context, nodes_set)
 					end
-					if node.inner then
+					if outers and node.inner then
 						treesitter_filter_window(node.inner.node, context, nodes_set)
 					end
 				end
