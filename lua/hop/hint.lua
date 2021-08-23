@@ -137,11 +137,10 @@ end
 -- TODO: performance of these functions may not be optimal
 M.treesitter_locals = function(filter, scope)
 	if filter == nil then
-		filter = function()
+		filter = function(loc)
 			return true
 		end
 	end
-	-- TODO: filter to current scope
 	return {
 		get_hint_list = function(self, hint_opts)
 			local locals = require("nvim-treesitter.locals")

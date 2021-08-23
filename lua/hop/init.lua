@@ -179,30 +179,24 @@ function M.hint_words(opts)
 end
 
 -- Treesitter hintings
--- TODO: doesn't grey out the buffer correctly
-function M.hint_locals(opts)
-	hint_with(hint.treesitter_locals(), get_command_opts(opts))
+-- FIXME: doesn't grey out the buffer correctly
+-- TODO: filter to current scope
+function M.hint_locals(opts, filter)
+	hint_with(hint.treesitter_locals(filter), get_command_opts(opts))
 end
 function M.hint_definitions(opts)
-	hint_with(
-		hint.treesitter_locals(function(loc)
-			return loc.definition
-		end),
-		get_command_opts(opts)
-	)
+	M.hint_locals(get_command_opts(opts), function(loc)
+		return loc.definition
+	end)
 end
 function M.hint_references(opts)
 	-- TODO: show only references to current ident
-	hint_with(
-		hint.treesitter_locals(function(loc)
-			return loc.reference
-		end),
-		get_command_opts(opts)
-	)
+	M.hint_locals(get_command_opts(opts), function(loc)
+		return loc.reference
+	end)
 end
--- TODO: use treesitter-textobjects queries
-function M.hint_textobjects(opts)
-	hint_with(hint.treesitter_queries(opts.query, opts.inners, opts.outers, opts.queryfile), get_command_opts(opts))
+function M.hint_textobjects(opts, query)
+	hint_with(hint.treesitter_queries(query.query, query.inners, query.outers, query.queryfile), get_command_opts(opts))
 end
 
 function M.hint_patterns(opts, pattern)
