@@ -63,9 +63,8 @@ end
 --
 -- Used to constrain scope of hopping to current line only
 function M.by_case_searching_line(pat, plain_search, opts)
-	local m = M.by_case_searching(pat, plain_search, opts)
-	m.curr_line_only = true
-	return m
+	opts.direction = constants.HintDirection.CURRENT_LINE
+	return M.by_case_searching(pat, plain_search, opts)
 end
 
 -- Word hint mode.
@@ -376,10 +375,6 @@ function M.create_hint_list_by_scanning_lines(hint_mode, opts)
 	-- cursor, allowing to zip this list with the hints and distribute the hints
 	-- Constrain range of lines if we are in current-line-only mode
 	local context = window.get_window_context(opts.direction)
-	if hint_mode.curr_line_only then
-		context.top_line = context.cursor_pos[1] - 1
-		context.bot_line = context.cursor_pos[1] - 1
-	end
 	local lines = vim.api.nvim_buf_get_lines(0, context.top_line, context.bot_line + 1, false)
 	local hint_list = {}
 
