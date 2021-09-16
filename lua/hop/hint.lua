@@ -89,6 +89,7 @@ M.by_line_start = {
 
 M.lsp_symbols = {
 	get_hint_list = function(self, hint_opts)
+		-- TODO: complete this part
 		-- 		local params = vim.lsp.util.make_position_params()
 		-- 		local results_lsp, err = vim.lsp.buf_request_sync(
 		-- 			0,

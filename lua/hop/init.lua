@@ -185,15 +185,24 @@ function M.hint_locals(opts, filter)
 	hint_with(hint.treesitter_locals(filter), get_command_opts(opts))
 end
 function M.hint_definitions(opts)
-	M.hint_locals(get_command_opts(opts), function(loc)
+	M.hint_locals(opts, function(loc)
 		return loc.definition
 	end)
 end
-function M.hint_references(opts)
-	-- TODO: show only references to current ident
-	M.hint_locals(get_command_opts(opts), function(loc)
-		return loc.reference
-	end)
+local ts_utils = require("nvim-treesitter.ts_utils")
+function M.hint_references(opts, pattern)
+	if pattern == nil then
+		M.hint_locals(opts, function(loc)
+			return loc.reference
+		end)
+	else
+		if pattern == "<cword>" or pattern == "<cWORD>" then
+			pattern = vim.fn.expand(pattern)
+		end
+		M.hint_locals(opts, function(loc)
+			return loc.reference and string.match(ts_utils.get_node_text(loc.reference.node)[1], pattern)
+		end)
+	end
 end
 function M.hint_textobjects(opts, query)
 	hint_with(hint.treesitter_queries(query.query, query.inners, query.outers, query.queryfile), get_command_opts(opts))
@@ -254,6 +263,17 @@ function M.hint_char2(opts)
 		return
 	end
 	local pat = vim.fn.nr2char(a) .. vim.fn.nr2char(b)
+	hint_with(hint.by_case_searching(pat, true, opts), opts)
+end
+
+function M.hint_cWORD(opts)
+	opts = get_command_opts(opts)
+	local pat = vim.fn.expand("<cWORD>")
+	hint_with(hint.by_case_searching(pat, true, opts), opts)
+end
+function M.hint_cword(opts)
+	opts = get_command_opts(opts)
+	local pat = vim.fn.expand("<cword>")
 	hint_with(hint.by_case_searching(pat, true, opts), opts)
 end
 
