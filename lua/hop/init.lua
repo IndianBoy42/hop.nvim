@@ -218,7 +218,15 @@ function M.hint_textobjects(query, opts)
 		-- end
 		query = { query = query }
 	end
-	hint_with(hint.treesitter_queries(query.query, query.inners, query.outers, query.queryfile), get_command_opts(opts))
+	hint_with(
+		hint.treesitter_queries(
+			query and query.query,
+			query and query.inners,
+			query and query.outers,
+			query and query.queryfile
+		),
+		get_command_opts(opts)
+	)
 end
 
 function M.hint_patterns(opts, pattern)
