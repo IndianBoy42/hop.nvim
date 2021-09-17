@@ -162,19 +162,15 @@ M.treesitter_locals = function(filter, scope)
 end
 
 M.treesitter_queries = function(query, inners, outers, queryfile)
+	queryfile = queryfile or "textobjects"
+	if inners == nil then
+		inners = true
+	end
+	if outers == nil then
+		outers = true
+	end
 	return {
 		get_hint_list = function(self, hint_opts)
-			query = nil
-			if queryfile == nil then
-				queryfile = "textobjects"
-			end
-			if inners == nil then
-				inners = true
-			end
-			if outers == nil then
-				outers = true
-			end
-
 			local context = window.get_window_context(hint_opts)
 			local queries = require("nvim-treesitter.query")
 			local tsutils = require("nvim-treesitter.utils")

@@ -181,30 +181,43 @@ end
 -- Treesitter hintings
 -- FIXME: doesn't grey out the buffer correctly
 -- TODO: filter to current scope
-function M.hint_locals(opts, filter)
+function M.hint_locals(filter, opts)
 	hint_with(hint.treesitter_locals(filter), get_command_opts(opts))
 end
 function M.hint_definitions(opts)
-	M.hint_locals(opts, function(loc)
+	M.hint_locals(function(loc)
 		return loc.definition
-	end)
+	end, opts)
+end
+function M.hint_scopes(opts)
+	M.hint_locals(function(loc)
+		return loc.scope
+	end, opts)
 end
 local ts_utils = require("nvim-treesitter.ts_utils")
 function M.hint_references(opts, pattern)
 	if pattern == nil then
-		M.hint_locals(opts, function(loc)
+		M.hint_locals(function(loc)
 			return loc.reference
-		end)
+		end, opts)
 	else
 		if pattern == "<cword>" or pattern == "<cWORD>" then
 			pattern = vim.fn.expand(pattern)
 		end
-		M.hint_locals(opts, function(loc)
+		M.hint_locals(function(loc)
 			return loc.reference and string.match(ts_utils.get_node_text(loc.reference.node)[1], pattern)
-		end)
+		end, opts)
 	end
 end
-function M.hint_textobjects(opts, query)
+local function ends_with(str, ending)
+	return ending == "" or str:sub(-#ending) == ending
+end
+function M.hint_textobjects(query, opts)
+	if type(query) == "string" then
+		-- if ends_with(query, "outer") then
+		-- end
+		query = { query = query }
+	end
 	hint_with(hint.treesitter_queries(query.query, query.inners, query.outers, query.queryfile), get_command_opts(opts))
 end
 
