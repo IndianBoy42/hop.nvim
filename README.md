@@ -33,25 +33,31 @@ Neovim version >0.5 – at least at the time of writing these lines:
 **Hop** is a modern take implementing this concept for the latest versions of
 Neovim.
 
+# This is a Fork
+
+I have forked hop.nvim due to slow pace of development, and I wanted to use treesitter to create the jump targets.
+
+This repository is basically the work of PR#123 on phaazon/hop.nvim, plus some cleanup and adding the treesitter integrations
+
 <!-- vim-markdown-toc GFM -->
 
-* [Features](#features)
-  * [Word mode (`:HopWord`)](#word-mode-hopword)
-  * [Line mode (`:HopLine`)](#line-mode-hopline)
-  * [1-char mode (`:HopChar1`)](#1-char-mode-hopchar1)
-  * [2-char mode (`:HopChar2`)](#2-char-mode-hopchar2)
-  * [Pattern mode (`:HopPattern`)](#pattern-mode-hoppattern)
-  * [Visual extend](#visual-extend)
-  * [Jump on sole occurrence](#jump-on-sole-occurrence)
-  * [Use as operator motion](#use-as-operator-motion)
-* [Getting started](#getting-started)
-  * [Installation](#installation)
-    * [Using vim-plug](#using-vim-plug)
-    * [Using packer](#using-packer)
-    * [Special notes regarding extended marks and virtual text](#special-notes-regarding-extended-marks-and-virtual-text)
-* [Usage](#usage)
-* [Keybindings](#keybindings)
-* [Configuration](#configuration)
+- [Features](#features)
+  - [Word mode (`:HopWord`)](#word-mode-hopword)
+  - [Line mode (`:HopLine`)](#line-mode-hopline)
+  - [1-char mode (`:HopChar1`)](#1-char-mode-hopchar1)
+  - [2-char mode (`:HopChar2`)](#2-char-mode-hopchar2)
+  - [Pattern mode (`:HopPattern`)](#pattern-mode-hoppattern)
+  - [Visual extend](#visual-extend)
+  - [Jump on sole occurrence](#jump-on-sole-occurrence)
+  - [Use as operator motion](#use-as-operator-motion)
+- [Getting started](#getting-started)
+  - [Installation](#installation)
+    - [Using vim-plug](#using-vim-plug)
+    - [Using packer](#using-packer)
+    - [Special notes regarding extended marks and virtual text](#special-notes-regarding-extended-marks-and-virtual-text)
+- [Usage](#usage)
+- [Keybindings](#keybindings)
+- [Configuration](#configuration)
 
 <!-- vim-markdown-toc -->
 
@@ -100,6 +106,102 @@ jump to any.
 
 ![](https://phaazon.net/media/uploads/hop_pattern_mode.gif)
 
+## Treesitter Integration
+
+You can jump to the results of tree sitter queries/locals/captures.
+
+in `require('hop.hint')` the hinting strategies are defined.
+
+```lua
+local hint = require'hop.hint'
+-- Add hints according to the results of a query
+-- Commonly used with: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+hint.treesitter_queries(
+    query, -- string, Capture group, if nil then it uses all the capture groups in the queryfile
+    inners, -- boolean, For textobjects whether to use `.inner`
+    outers, -- boolean, For textobjects whether to use `.outer`
+    queryfile -- string, textobjects if nil else the file to run capture
+)
+-- Add hints to locals matching some filter
+hint.treesitter_locals(filter)
+local ts_utils = require("nvim-treesitter.ts_utils")
+-- The filter function is called once per locals node found, return a truthy or falsy value to accept or reject, respectively
+hint.treesitter_locals(function(loc)
+    -- You can use the following to filter by what kind of local it is
+    -- loc.definition.node
+    -- loc.scope.node
+    -- loc.reference.node
+    -- The node field is a table with information about the node
+    -- Use ts_utils to extract the information, such as the text of the node:
+    -- ts_utils.get_node_text(<node>)[1]
+end)
+hint.treesitter_locals() -- nil to show all locals
+```
+
+Functions for easily using these are defined in 'require('hop')'
+
+```
+function M.hint_locals(filter, opts) -- Filter here is passed to hint.treesitter_locals(filter)
+function M.hint_definitions(opts)
+function M.hint_scopes(opts)
+function M.hint_references(opts, pattern) -- Can define a lua pattern to search, or provide `<cword>`, `<cWORD>` to use the current word/WORD
+function M.hint_textobjects(query, opts)
+```
+
+The API for this is primarily Lua based, so add keybindings with rhs = `<cmd>lua require'hop'.<hint_function>()<cr>`. Vim Commands could be provided later if a good API is found, since currently the Lua API uses Lua datastructures that would have to be mapped
+
+## Custom Targets
+
+The easiest way to add new hop commands is to use `get_hint_list`. Define a table with the `get_hint_list` key containing a `function(self, hint_opts)`, from this function return a list of targets, each target is a table with the following structure
+
+```lua
+{ line = line, col = column }
+```
+
+You should use `get_window_context(hint_opts)` to get information about the visible area of the buffer, in order to filter out targets that are off screen. For example,
+
+```lua
+  if line <= context.bot_line and line >= context.top_line then
+  end
+```
+
+For example in my personal config I have this code to allow me to hop to visible LSP diagnostics
+
+```lua
+local teutils = require "telescope.utils" -- Use telescope as it has a very nice function for getting all the diagnostics in a list
+local hint_with = hop.hint_with
+local get_command_opts = hop.get_command_opts
+local function lsp_filter_window(node, context, nodes_set)
+  local line = node.lnum - 1
+  local col = node.col
+  if line <= context.bot_line and line >= context.top_line then
+    nodes_set[line .. col] = {
+      line = line,
+      col = col + 1,
+    }
+  end
+end
+
+local lsp_diagnostics = {
+  get_hint_list = function(_, hint_opts)
+    local context = get_window_context(hint_opts)
+    local diags = teutils.diagnostics_to_tbl()
+    local out = {}
+    for _, diag in ipairs(diags) do
+      lsp_filter_window(diag, context, out)
+    end
+    return vim.tbl_values(out)
+  end,
+}
+# Call this function from a keymap
+M.hop_diagnostics = function(opts)
+  hint_with(lsp_diagnostics, get_command_opts(opts))
+end
+```
+
+TODO: proper documentation of this part
+Please see the contents of `lua/hop/hint.lua` for more details on how you can define targets
+
 ## Visual extend
 
 If you call any Hop commands / Lua functions from one of the visual modes, the visual selection will be extended.
@@ -135,6 +237,8 @@ Whatever solution / package manager you are using, you need to ensure that the `
 point, otherwise the plugin will not work. If your package manager doesn’t support automatic calling of this function,
 you can call it manually after your plugin is installed:
 
+This fork requires nvim-treesitter, I may make it optional at a later date if there is demand for it.
+
 ```lua
 require'hop'.setup()
 ```
@@ -144,14 +248,16 @@ To get a default experience. Feel free to customize later the `setup` invocation
 ### Using [vim-plug]
 
 ```vim
-Plug 'phaazon/hop.nvim'
+Plug 'nvim-treesitter/nvim-treesitter'
+Plug 'IndianBoy42/hop.nvim'
 ```
 
 ### Using [packer]
 
 ```lua
+use 'nvim-treesitter/nvim-treesitter'
 use {
-  'phaazon/hop.nvim',
+  'IndianBoy42/hop.nvim',
   as = 'hop',
   config = function()
     -- you can configure Hop the way you like here; see :h hop-config
@@ -167,7 +273,7 @@ bug related to them were found in Hop. However, if you would rather stick to the
 to pinpoint the `pre-extmarks` branch. For instance, with [vim-plug]:
 
 ```vim
-Plug 'phaazon/hop.nvim', { 'branch': 'pre-extmarks' }
+Plug 'IndianBoy42/hop.nvim', { 'branch': 'pre-extmarks' }
 ```
 
 Keep in mind that this branch is provided as-is until Neovim bugs are fixed regarding extended marks (if any). I don’t
@@ -228,9 +334,8 @@ You can configure Hop via several different mechanisms:
   ```
   :lua require'hop'.hint_words({ term_seq_bias = 0.5 })
   ```
-- In the case of none of the above are provided, options are automatically read from the _default_ options. See `:h
-  hop-config` for a list of default values.
+- In the case of none of the above are provided, options are automatically read from the _default_ options. See `:h hop-config` for a list of default values.
 
-[EasyMotion]: https://github.com/easymotion/vim-easymotion
+[easymotion]: https://github.com/easymotion/vim-easymotion
 [vim-plug]: https://github.com/junegunn/vim-plug
 [packer]: https://github.com/wbthomason/packer.nvim

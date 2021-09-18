@@ -180,8 +180,6 @@ function M.hint_words(opts)
 end
 
 -- Treesitter hintings
--- FIXME: doesn't grey out the buffer correctly
--- TODO: filter to current scope
 function M.hint_locals(filter, opts)
 	hint_with(hint.treesitter_locals(filter), get_command_opts(opts))
 end
@@ -206,7 +204,8 @@ function M.hint_references(opts, pattern)
 			pattern = vim.fn.expand(pattern)
 		end
 		M.hint_locals(function(loc)
-			return loc.reference and string.match(ts_utils.get_node_text(loc.reference.node)[1], pattern)
+			return loc.reference and string.match(ts_utils.get_node_text(loc.reference.node)[1], pattern) 
+        or loc.definition and string.match(ts_utils.get_node_text(loc.definition.node)[1], pattern) 
 		end, opts)
 	end
 end
