@@ -43,10 +43,13 @@ This repository is basically the work of PR#123 on phaazon/hop.nvim, plus some c
 
 - [Features](#features)
   - [Word mode (`:HopWord`)](#word-mode-hopword)
+  - [<cword> mode (`:HopCword`)](#cword-mode-hopcword)
   - [Line mode (`:HopLine`)](#line-mode-hopline)
   - [1-char mode (`:HopChar1`)](#1-char-mode-hopchar1)
   - [2-char mode (`:HopChar2`)](#2-char-mode-hopchar2)
   - [Pattern mode (`:HopPattern`)](#pattern-mode-hoppattern)
+  - [Treesitter Integration](#treesitter-integration)
+  - [Custom Targets](#custom-targets)
   - [Visual extend](#visual-extend)
   - [Jump on sole occurrence](#jump-on-sole-occurrence)
   - [Use as operator motion](#use-as-operator-motion)
@@ -76,6 +79,10 @@ This repository is basically the work of PR#123 on phaazon/hop.nvim, plus some c
 This mode highlights all the recognized words in the visible part of the buffer and allows you to jump to any.
 
 ![](https://phaazon.net/media/uploads/hop_word_mode.gif)
+
+## <cword> mode (`:HopCword`)
+
+This mode highlights all occurrences of the current word the cursor is on and allows you to jump to any
 
 ## Line mode (`:HopLine`)
 
@@ -148,7 +155,19 @@ function M.hint_references(opts, pattern) -- Can define a lua pattern to search,
 function M.hint_textobjects(query, opts)
 ```
 
-The API for this is primarily Lua based, so add keybindings with rhs = `<cmd>lua require'hop'.<hint_function>()<cr>`. Vim Commands could be provided later if a good API is found, since currently the Lua API uses Lua datastructures that would have to be mapped
+As well as commands
+
+```
+HopLocals
+HopDefinitions
+HopReferences
+HopScopes
+HopUsages
+HopTextobjects
+HopFunctions
+```
+
+The Lua based API is more flexible and customizable for now, for example HopTextobjects doesn't allow you to specify what kind of textobject yet
 
 ## Custom Targets
 

@@ -41,3 +41,12 @@ command! HopChar1LineAC lua require'hop'.hint_char1_line({ direction = require'h
 command! HopChar1LineBC lua require'hop'.hint_char1_line({ direction = require'hop.constants'.HintDirection.BEFORE_CURSOR })
 
 command! HopLocals lua require'hop'.hint_locals()
+command! HopDefinitions lua require'hop'.hint_definitions()
+command! HopReferences lua require'hop'.hint_references()
+command! HopScopes lua require'hop'.hint_scopes()
+command! HopUsages lua require'hop'.hint_references(nil, '<cword>')
+command! HopTextobjects lua require'hop'.hint_textobjects()
+command! HopFunctions lua require'hop'.hint_textobjects({ query = 'function' })
+
+command! HopCword lua require'hop'.hint_cword()
+command! HopCWORD lua require'hop'.hint_cWORD()
