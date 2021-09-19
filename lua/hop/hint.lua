@@ -86,6 +86,31 @@ M.by_line_start = {
 		return M.create_hint_list_by_scanning_lines(self, hint_opts)
 	end,
 }
+-- Keep the current column while jumping by line
+M.by_line_vertical = {
+	oneshot = true,
+	match = function(_, _, cursor_col)
+		return cursor_col, cursor_col, false
+	end,
+	get_hint_list = function(self, hint_opts)
+		return M.create_hint_list_by_scanning_lines(self, hint_opts)
+	end,
+}
+-- Line hint mode skipping leading whitespace.
+--
+-- Used to tag the beginning of each lines with hints.
+function M.by_line_start_skip_whitespace()
+	local pat = vim.regex("\\S")
+	return {
+		oneshot = true,
+		match = function(s)
+			return pat:match_str(s)
+		end,
+		get_hint_list = function(self, hint_opts)
+			return M.create_hint_list_by_scanning_lines(self, hint_opts)
+		end,
+	}
+end
 
 -- Hint by lsp diagnostics
 M.lsp_diagnostics = {
@@ -177,22 +202,6 @@ M.treesitter_queries = function(query, inners, outers, queryfile)
 	}
 end
 
--- Line hint mode skipping leading whitespace.
---
--- Used to tag the beginning of each lines with hints.
-function M.by_line_start_skip_whitespace()
-	local pat = vim.regex("\\S")
-	return {
-		oneshot = true,
-		match = function(s)
-			return pat:match_str(s)
-		end,
-		get_hint_list = function(self, hint_opts)
-			return M.create_hint_list_by_scanning_lines(self, hint_opts)
-		end,
-	}
-end
-
 -- Turn a table representing a hint into a string.
 local function tbl_to_str(hint)
 	local s = ""
@@ -223,7 +232,7 @@ end
 -- The direction_mode argument allows to start / end hint creation after or before the cursor position
 --
 -- This function returns the list of hints
-function M.mark_hints_line(hint_mode, line_nr, line, col_offset, win_width, direction_mode)
+function M.mark_hints_line(hint_mode, line_nr, line, col_offset, win_width, direction_mode, cursor_col)
 	local hints = {}
 	local end_index = nil
 
@@ -252,7 +261,7 @@ function M.mark_hints_line(hint_mode, line_nr, line, col_offset, win_width, dire
 	local col = 1
 	while true do
 		local s = shifted_line:sub(col)
-		local b, e = hint_mode.match(s)
+		local b, e = hint_mode.match(s, col, cursor_col)
 
 		if b == nil or (b == 0 and e == 0) then
 			break
@@ -261,7 +270,7 @@ function M.mark_hints_line(hint_mode, line_nr, line, col_offset, win_width, dire
 		local colb = col + b
 		hints[#hints + 1] = {
 			line = line_nr,
-			col = math.max(1, colb + col_offset + col_bias),
+			col = math.min(math.max(1, colb + col_offset + col_bias), shifted_line:len()),
 		}
 
 		if hint_mode.oneshot then
@@ -329,7 +338,8 @@ local function create_hints_for_line(i, hint_list, hint_mode, context, direction
 		lines[i],
 		context.col_offset,
 		context.win_width,
-		direction_mode
+		direction_mode,
+		context.cursor_pos[2]
 	)
 	for _, val in pairs(line_hints) do
 		hint_list[#hint_list + 1] = val

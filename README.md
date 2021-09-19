@@ -90,6 +90,8 @@ This mode highlights the beginnings of each line in the visible part of the buff
 
 ![](https://phaazon.net/media/uploads/hop_line_mode.gif)
 
+You can use `HopVertical` to replicate the easymotion feature of preserving the cursor column position while jumping to a different line
+
 ## 1-char mode (`:HopChar1`)
 
 This mode expects the user to type a single character. That character will then be highlighted in the visible part of

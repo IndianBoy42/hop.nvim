@@ -204,8 +204,8 @@ function M.hint_references(opts, pattern)
 			pattern = vim.fn.expand(pattern)
 		end
 		M.hint_locals(function(loc)
-			return loc.reference and string.match(ts_utils.get_node_text(loc.reference.node)[1], pattern) 
-        or loc.definition and string.match(ts_utils.get_node_text(loc.definition.node)[1], pattern) 
+			return loc.reference and string.match(ts_utils.get_node_text(loc.reference.node)[1], pattern)
+				or loc.definition and string.match(ts_utils.get_node_text(loc.definition.node)[1], pattern)
 		end, opts)
 	end
 end
@@ -300,6 +300,10 @@ end
 
 function M.hint_lines(opts)
 	hint_with(hint.by_line_start, get_command_opts(opts))
+end
+
+function M.hint_lines_vertical(opts)
+	hint_with(hint.by_line_vertical, get_command_opts(opts))
 end
 
 function M.hint_lines_skip_whitespace(opts)

@@ -25,6 +25,11 @@ command! HopChar2 lua require'hop'.hint_char2()
 command! HopChar2BC lua require'hop'.hint_char2({ direction = require'hop.constants'.HintDirection.BEFORE_CURSOR })
 command! HopChar2AC lua require'hop'.hint_char2({ direction = require'hop.constants'.HintDirection.AFTER_CURSOR })
 
+" The jump-to-line (vertical) command.
+command! HopVertical lua require'hop'.hint_lines_vertical(nil)
+command! HopVerticalBC lua require'hop'.hint_lines_vertical({ direction = require'hop.constants'.HintDirection.BEFORE_CURSOR })
+command! HopVerticalAC lua require'hop'.hint_lines_vertical({ direction = require'hop.constants'.HintDirection.AFTER_CURSOR })
+
 " The jump-to-line command.
 command! HopLine lua require'hop'.hint_lines()
 command! HopLineBC lua require'hop'.hint_lines({ direction = require'hop.constants'.HintDirection.BEFORE_CURSOR })
